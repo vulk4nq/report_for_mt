@@ -1,0 +1,3 @@
+wss://stream.binance.us:9443
+wss://stream.binance.us:9443/ws/btcusdt@trade
+socket = 'wss://stream.binance.com:9443/ws'

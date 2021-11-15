@@ -1,0 +1,10 @@
+CREATE TABLE data(
+id bigserial,
+coin text,
+tp_or_sl text,
+change real,
+tp real,
+sl real,
+distance real,
+type_of_ text,
+time bigint);
