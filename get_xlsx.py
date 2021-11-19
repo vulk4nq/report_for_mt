@@ -14,13 +14,13 @@ current_time = datetime.now()
 
 #time in minutes
 def get_xlsx(minutes):
-    print(minutes==5)
+    
     db = psycopg2.connect(user="postgres",
                           # пароль, который указали при установке PostgreSQL
-                          password="",
-                          host="localhost",#80.89.238.221
+                          password="qazWqwpo1",
+                          host="80.89.238.221",#80.89.238.221
                           port="5432",
-                          database="bot")#websockets_data
+                          database="websockets_data")#websockets_data
     cursor = db.cursor()
    
     query = f"""SELECT max(time) FROM data;
@@ -119,6 +119,10 @@ def get_xlsx(minutes):
         ws[f'G{count}'] = x[1]  # distance
         ws[f'H{count}'] = x[2]  # tp
         ws[f'I{count}'] = x[3]  # sl
+        if x[-1] == 'sell':
+            side = -1
+        else:
+            side = 1
         ws[f'J{count}'] = f"""
 ###START###
 algorithmName=0=Shots Group;
@@ -153,7 +157,7 @@ distance=4={x[1]};
 buffer=4=0.1;
 followPriceDelay=2=1;
 useTickerSource=20=False;
-side=10=-1;
+side=10={side};
 clientOrderType=14=1;
 stopPricePercentage=4=3;
 orderSizeUSDT=5=15;

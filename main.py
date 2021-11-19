@@ -209,7 +209,7 @@ class BOT():
                     ban_distance.clear()
              
         except Exception:
-            os.system("sudo systemctl restart postgres")       
+            os.system("systemctl restart postgresql")       
 
         
             
