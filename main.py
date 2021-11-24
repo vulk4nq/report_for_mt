@@ -51,6 +51,7 @@ class BOT():
         new_data = []
         for i in range(1,len(self.data)-1):
             
+            
             if self.data[i]['p'] == self.data[i-1]['p'] and self.data[i]['T']==self.data[i-1]['T']:
                 continue
             new_data.append(self.data[i])
@@ -110,6 +111,7 @@ class BOT():
                     x = round(float(self.data[i]['p'])/(float(first_p)/100)-100,3)
                     if x > 0.15 or x < -0.15:
                         print(f"Shot!  {x}    {self.name} TIME: {self.data[i]['T']}")
+                        
                         
                     
                     for distance in settings.Distance:
@@ -209,113 +211,7 @@ class BOT():
                     ban_distance.clear()
              
         except Exception:
-            os.system("systemctl restart postgresql")       
-
-        
-            
-                
-        
-
-
-    def calculation(self):
-        db = psycopg2.connect(user="postgres",
-                                    # пароль, который указали при установке PostgreSQL
-                                    password="",
-                                    host="localhost",
-                                    port="5432",
-                                    database="bot")
-        cursor = db.cursor()
-        query = ''
-        for data in self.data:
-        	
-            for distance in settings.Distance:
-                if distance in self.used_distance:
-                	break
-
-                if  (float(data['p']))/(float(self.first_data['p'])/100)-100 > distance-0.001:
-                    self.used_distance.append(distance)
-                    for tp in settings.TakeProfit:
-                        for sl in settings.StopLos:
-                            
-                            tp_or_sl = 'None'
-                            
-                            sell_or_buy = 'sell'
-                            for post_data in self.post_data:
-                                if  float(post_data['p'])/(float(data['p'])/100)-100 < -tp+0.001 :
-
-                                    tp_or_sl = 'tp'
-                                    time = post_data['T']
-                                    
-                                
-                                elif float(post_data['p'])/(float(data['p'])/100)-100 > sl+0.001:
-                                    tp_or_sl = 'sl'
-                                    time = post_data['T']
-                                
-                            if tp_or_sl == 'None':
-                                change = (float(data['p']))/(float(data['p'])/100)-100
-                                time = data['T']
-                            
-                            
-                            if tp_or_sl == 'None':
-                                
-                                f.write(self.name+' '+tp_or_sl+' '+ str(round(change,3))+' '+ str(tp) +' '+ str(sl) +' '+ str(distance)+" "+sell_or_buy+' '+str(time)+'\n')
-                                query = f""" INSERT INTO data(coin,tp_or_sl,change,tp,sl,distance,type_of_,time) VALUES ('{self.name}','{tp_or_sl}',{round(change,3)},{tp},{sl},{distance},'{sell_or_buy}',{time})
-                                    """
-                                cursor.execute(query)
-                                #print(query) 
-                                db.commit()
-                                
-                            else:
-                                
-                                f.write(self.name +" "+tp_or_sl+' '+ str(0) +' '+ str(tp) +' '+ str(sl) +' '+ str(distance)+' '+ sell_or_buy+' '+str(time)+'\n')
-                                query = f""" INSERT INTO data(coin,tp_or_sl,change,tp,sl,distance,type_of_,time) VALUES ('{self.name}','{tp_or_sl}',{0},{tp},{sl},{distance},'{sell_or_buy}',{time})
-                                    """
-                                cursor.execute(query)
-                                    
-                                db.commit()
-                                
-                                   
-                if (float(data['p']))/(float(self.first_data['p'])/100)-100 < -distance+0.001:
-                    self.used_distance.append(distance)
-                    for tp in settings.TakeProfit:
-                        for sl in settings.StopLos:
-                         
-                            tp_or_sl = 'None'
-                            time = 0
-                            sell_or_buy = 'buy'
-                            for post_data in self.post_data:
-                                if (float(post_data['p']))/(float(data['p'])/100)-100 > tp+0.001:
-                                    tp_or_sl = 'tp'
-                                    time = post_data['T']
-                                    print(tp_or_sl,time)
-                                elif (float(post_data['p']))/(float(data['p'])/100)-100 < -sl+0.001:
-                                    tp_or_sl = 'sl'
-                                    time = post_data['T']
-                                    
-                            if tp_or_sl == 'None':
-                                change = (float(self.post_data[-1]['p']))/(float(data['p'])/100)-100
-                                time = self.post_data[-1]['T']
-                            
-                            if tp_or_sl == 'None':
-                                f.write(self.name+' '+tp_or_sl+' '+ str(round(change,3))+' '+ str(tp) +' '+ str(sl) +' '+ str(distance)+" "+sell_or_buy+' '+str(time)+'\n')
-                                
-                                query = f""" INSERT INTO data(coin,tp_or_sl,change,tp,sl,distance,type_of_,time) VALUES ('{self.name}','{tp_or_sl}',{round(change,3)},{tp},{sl},{distance},'{sell_or_buy}',{time})
-                                    """
-                                cursor.execute(query)
-                                #print(query) 
-                                db.commit()
-                                
-                            else:
-                                
-                                f.write(self.name +" "+tp_or_sl+' '+ str(0) +' '+ str(tp) +' '+ str(sl) +' '+ str(distance)+' '+ sell_or_buy+' '+str(time) +'\n')
-                                query = f""" INSERT INTO data(coin,tp_or_sl,change,tp,sl,distance,type_of_,time) VALUES ('{self.name}','{tp_or_sl}',{0},{tp},{sl},{distance},'{sell_or_buy}',{time})
-                                    """
-                                cursor.execute(query)
-                                #print(query) 
-                                db.commit()
-                                
-                                   
-        db.close()
+            os.system("systemctl restart postgresql") 
 
 
 
@@ -330,7 +226,11 @@ async def main():
 
     
     streams = ''
-    
+    try:
+        os.mkdir('data')
+        
+    except Exception:
+        pass
     for pair in pairs:
         streams = streams+pair+"@trade/"
     streams = streams[:streams.rfind('/')]
@@ -353,6 +253,8 @@ async def main():
             res = await tscm.recv()
             name = res['stream'][:res['stream'].find('@')]
             data = res['data']
+            with open(f'data/{name}.txt','a') as f:
+                f.write(f'{data}\n')
             
             if holder[name].first_data == 0:
                 holder[name].first_data = data
